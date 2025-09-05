@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import HomeView from '../components/HomeView';
 import { useAuth } from '../hooks/useAuth';

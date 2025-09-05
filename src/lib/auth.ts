@@ -1,5 +1,4 @@
-import { RegisterData, LoginData } from '../types/auth';
-import { User } from '../types/components';
+import { RegisterData, LoginData, User } from '../types/auth';
 import jwt from 'jsonwebtoken';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
@@ -85,7 +84,7 @@ export const loginUser = async (data: LoginData): Promise<{ success: boolean; us
     }
     
     // 创建JWT令牌
-    const { password: _, ...userWithoutPassword } = user;
+    const { password: _password, ...userWithoutPassword } = user;
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,

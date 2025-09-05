@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // 构建消息历史
     const messages = [
       { role: "system", content: systemPrompt },
-      ...conversationHistory.map((msg: any) => ({
+      ...conversationHistory.map((msg: { role: string; content: string }) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content
       })),
