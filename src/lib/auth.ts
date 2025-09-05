@@ -1,37 +1,35 @@
 import { RegisterData, LoginData, User } from '../types/auth';
 import jwt from 'jsonwebtoken';
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
+import { sql } from './db';
 
-// 数据库文件路径
-const DB_PATH = './database.db';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// 初始化数据库
-const initDatabase = async () => {
-  const db = await open({
-    filename: DB_PATH,
-    driver: sqlite3.Database
-  });
-  
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  
-  return db;
-};
 
 // 根据用户名查找用户
 export const findUserByUsername = async (username: string): Promise<User | null> => {
-  const db = await initDatabase();
-  const row = await db.get('SELECT id, username, password, created_at as createdAt FROM users WHERE username = ?', [username]);
-  await db.close();
-  return row || null;
+  try {
+    const result = await sql`
+      SELECT id, username, password, created_at as createdAt 
+      FROM users 
+      WHERE username = ${username}
+    `;
+    
+    // 检查查询结果是否存在
+    if (result.rowCount === 0) {
+      return null;
+    }
+    
+    // 确保返回的对象符合 User 类型定义
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      username: row.username,
+      password: row.password,
+      createdAt: new Date(row.createdat) // 注意：数据库字段名是 created_at，但查询时已转换为 createdAt
+    };
+  } catch (error) {
+    console.error('查找用户错误:', error);
+    return null;
+  }
 };
 
 // 注册新用户
@@ -50,13 +48,11 @@ export const registerUser = async (data: RegisterData): Promise<{ success: boole
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // 插入新用户
-    const db = await initDatabase();
-    const createdAt = new Date();
-    await db.run(
-      'INSERT INTO users (username, password, created_at) VALUES (?, ?, ?)',
-      [username, hashedPassword, createdAt]
-    );
-    await db.close();
+    const createdAt = new Date().toISOString();
+    await sql`
+      INSERT INTO users (username, password, created_at) 
+      VALUES (${username}, ${hashedPassword}, ${createdAt})
+    `;
     
     return { success: true };
   } catch (error) {
@@ -104,11 +100,25 @@ export const verifyToken = async (token: string): Promise<User | null> => {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number; username: string };
     
     // 查找用户
-    const db = await initDatabase();
-    const user = await db.get('SELECT id, username, created_at as createdAt FROM users WHERE id = ?', [decoded.id]);
-    await db.close();
+    const result = await sql`
+      SELECT id, username, created_at as createdAt 
+      FROM users 
+      WHERE id = ${decoded.id}
+    `;
     
-    return user || null;
+    // 检查查询结果是否存在
+    if (result.rowCount === 0) {
+      return null;
+    }
+    
+    // 确保返回的对象符合 User 类型定义
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      username: row.username,
+      password: '', // 注意：验证令牌时不需要密码
+      createdAt: new Date(row.createdat) // 注意：数据库字段名是 created_at，但查询时已转换为 createdAt
+    };
   } catch (error) {
     console.error('令牌验证错误:', error);
     return null;
