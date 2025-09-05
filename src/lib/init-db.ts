@@ -1,4 +1,9 @@
+import dotenv from 'dotenv';
 import { sql } from './db';
+import path from 'path';
+
+// 加载 .env.local 文件
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 async function initDatabase() {
   try {
