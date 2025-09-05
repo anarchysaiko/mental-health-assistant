@@ -22,8 +22,8 @@ export default function RegisterPage() {
     try {
       await register({ username, password, confirmPassword });
       router.push('/'); // 注册成功后跳转到主页
-    } catch (err) {
-      setError(err.message || '注册失败');
+    } catch (err: unknown) {
+      setError((err as { message?: string }).message || '注册失败');
     }
   };
   

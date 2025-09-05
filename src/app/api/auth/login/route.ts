@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     
     const result = await loginUser(data);
     
-    if (result.success) {
+    if (result.success && result.user && result.token) {
       // 设置cookie
       const response = NextResponse.json(
         { message: '登录成功', user: { id: result.user.id, username: result.user.username } },

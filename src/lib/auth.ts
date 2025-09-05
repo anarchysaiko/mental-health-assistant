@@ -84,7 +84,7 @@ export const loginUser = async (data: LoginData): Promise<{ success: boolean; us
     }
     
     // 创建JWT令牌
-    const { password: _password, ...userWithoutPassword } = user;
+    const { password: _, ...userWithoutPassword } = user;
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,

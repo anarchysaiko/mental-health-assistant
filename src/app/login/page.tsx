@@ -21,8 +21,8 @@ export default function LoginPage() {
     try {
       await login({ username, password });
       router.push('/'); // 登录成功后跳转到主页
-    } catch (err) {
-      setError(err.message || '登录失败');
+    } catch (err: unknown) {
+      setError((err as { message?: string }).message || '登录失败');
     }
   };
   
